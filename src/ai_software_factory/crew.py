@@ -1,6 +1,7 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
+from ai_software_factory.tools.deployment_tools import FileWriterTool, ShellCommandTool
 
 
 @CrewBase
@@ -79,7 +80,8 @@ class AiSoftwareFactory():
     def deployment_agent(self) -> Agent:
         return Agent(
             config=self.agents_config['deployment_agent'],
-            verbose=True
+            verbose=True,
+            tools=[FileWriterTool(), ShellCommandTool()]
         )
 
     # ─── Tasks (sequential order) ─────────────────────────────

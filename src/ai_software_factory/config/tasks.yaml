@@ -223,47 +223,59 @@ git_integration_task:
 # 🔟 Deployment Agent Task
 deployment_task:
   description: >
-    Based on ALL generated code (database schema, backend API, frontend app),
-    generate complete deployment configurations and step-by-step deployment
-    guides for FREE cloud services:
+    You MUST actually deploy the generated application using your tools.
+    Do NOT just write documentation. Use file_writer and shell_command tools.
 
-    1. DATABASE - Supabase (free PostgreSQL)
-       - Provide the SQL migration script adapted for Supabase
-       - Environment variables needed (SUPABASE_URL, SUPABASE_ANON_KEY)
-       - Step-by-step setup instructions on supabase.com
+    Follow these steps IN ORDER:
 
-    2. BACKEND - Render (free web service)
-       - Generate a complete Dockerfile for the Node.js/Express backend
-       - Generate a render.yaml blueprint file
-       - List all environment variables needed (DATABASE_URL, PORT, etc.)
-       - Step-by-step deployment instructions on render.com
-       - Include health check endpoint configuration
+    STEP 1 - ORGANIZE PROJECT FILES:
+    Use file_writer to create the project structure under output/deploy/:
+    - output/deploy/backend/server.js (copy backend code from context)
+    - output/deploy/backend/package.json (with express, pg dependencies)
+    - output/deploy/backend/Dockerfile
+    - output/deploy/backend/.env.example
+    - output/deploy/frontend/package.json (with react dependencies)
+    - output/deploy/frontend/src/App.jsx (copy frontend code from context)
+    - output/deploy/frontend/vercel.json
+    - output/deploy/database/schema.sql (copy SQL from context)
+    - output/deploy/database/seed.sql
 
-    3. FRONTEND - Vercel (free hosting)
-       - Generate a vercel.json configuration file
-       - Configure API proxy/rewrites to point to the Render backend URL
-       - Environment variables needed (REACT_APP_API_URL)
-       - Step-by-step deployment instructions on vercel.com
+    STEP 2 - CREATE DEPLOYMENT CONFIGS:
+    Use file_writer to create:
+    - output/deploy/backend/Dockerfile with Node.js 20 alpine base
+    - output/deploy/backend/render.yaml blueprint
+    - output/deploy/frontend/vercel.json with API rewrites
+    - output/deploy/docker-compose.yml for local testing
 
-    4. DEPLOYMENT SCRIPT
-       - Generate a single deploy.sh bash script that guides the user
-         through the entire deployment process step by step
-       - Include commands for Supabase CLI, Render CLI, and Vercel CLI
+    STEP 3 - INITIALIZE BACKEND:
+    Use shell_command to run:
+    - cd output/deploy/backend && npm init -y
+    - npm install express pg dotenv cors
 
-    5. ENVIRONMENT VARIABLES REFERENCE
-       - Complete table of ALL env vars across all services
-       - Which service each belongs to
-       - Example values
+    STEP 4 - INITIALIZE FRONTEND:
+    Use shell_command to run:
+    - cd output/deploy/frontend && npm init -y
+    - npx create-react-app . --template minimal (or npm install react react-dom)
 
-    All configs must work with free tiers. No paid features.
+    STEP 5 - CREATE DEPLOYMENT SCRIPT:
+    Use file_writer to create output/deploy/deploy.sh that automates:
+    - Supabase project creation and schema migration
+    - Render service deployment
+    - Vercel frontend deployment
+    - Environment variable configuration
+
+    STEP 6 - VERIFY:
+    Use shell_command to verify:
+    - ls -la output/deploy/ to confirm all files exist
+    - Check package.json files are valid
+
+    Report the complete file structure and deployment status.
   expected_output: >
-    A complete deployment guide in markdown with:
-    1. Supabase setup - adapted SQL migration + setup steps
-    2. Dockerfile - production-ready for Render
-    3. render.yaml - Render blueprint
-    4. vercel.json - Vercel config with API rewrites
-    5. deploy.sh - automated deployment script
-    6. Environment variables reference table
-    7. Step-by-step instructions for each platform
-    All configurations should be copy-paste ready and work on free tiers.
+    A deployment report with:
+    1. Complete file tree of output/deploy/ showing all created files
+    2. Status of each step (success/failure)
+    3. The deploy.sh script contents
+    4. Instructions to run: cd output/deploy && ./deploy.sh
+    5. All environment variables needed with example values
+    6. URLs where the app will be accessible after deployment
   agent: deployment_agent
