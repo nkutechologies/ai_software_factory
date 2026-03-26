@@ -123,6 +123,15 @@ def run():
         srs_docx = 'output/01_srs.docx'
         if Path(srs_md).exists():
             markdown_to_docx(srs_md, srs_docx)
+            # Auto-open the Word document
+            import subprocess, platform
+            abs_path = str(Path(srs_docx).resolve())
+            if platform.system() == 'Darwin':
+                subprocess.run(['open', abs_path])
+            elif platform.system() == 'Windows':
+                subprocess.run(['start', abs_path], shell=True)
+            else:
+                subprocess.run(['xdg-open', abs_path])
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 
