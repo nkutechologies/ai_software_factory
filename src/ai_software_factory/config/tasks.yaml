@@ -3,24 +3,55 @@
 # 1️⃣ Requirement Agent Task
 requirement_task:
   description: >
-    Convert the following project idea into a comprehensive Software Requirement
-    Specification (SRS) document:
+    Convert the following project idea into a formal Software Requirement
+    Specification (SRS) document following IEEE 830 standard format:
 
     Project Idea: {project_idea}
 
-    The SRS must include:
-    1. System Overview - brief description of what the system does
-    2. User Roles - all user types who will interact with the system
-    3. Functional Requirements - numbered list (FR1, FR2, etc.) of all features
-    4. Modules - logical groupings of functionality
-    5. Data Entities - all database entities/models needed
-    6. API Requirements - list of REST API endpoints (method + path)
+    The SRS document MUST include ALL of the following sections:
 
-    Be thorough and cover all implied features from the idea.
+    1. INTRODUCTION
+       1.1 Purpose - purpose of the SRS document
+       1.2 Scope - name of the software, what it will do and not do
+       1.3 Definitions, Acronyms, and Abbreviations
+       1.4 References
+       1.5 Overview of document structure
+
+    2. OVERALL DESCRIPTION
+       2.1 Product Perspective - how it fits in the larger ecosystem
+       2.2 Product Functions - summary of major functions
+       2.3 User Roles and Characteristics - all user types with descriptions
+       2.4 Constraints - technical, regulatory, or business constraints
+       2.5 Assumptions and Dependencies
+
+    3. SPECIFIC REQUIREMENTS
+       3.1 Functional Requirements - numbered (FR-001, FR-002, etc.) with:
+           - ID, Title, Description, Priority (High/Medium/Low), Input, Output, Acceptance Criteria
+       3.2 Non-Functional Requirements - performance, security, scalability
+       3.3 External Interface Requirements - user interfaces, API interfaces, hardware interfaces
+
+    4. SYSTEM MODELS
+       4.1 Use Case Descriptions - actor, precondition, main flow, postcondition
+       4.2 Data Entities - all entities with their attributes and relationships
+       4.3 System Modules - logical groupings with descriptions
+
+    5. API SPECIFICATION
+       5.1 API Endpoints - method, path, request body, response, status codes
+       5.2 Authentication requirements
+
+    6. APPENDIX
+       6.1 Traceability Matrix - mapping requirements to modules
+
+    Be thorough. Cover all explicit AND implied features from the idea.
+    Each functional requirement must have clear acceptance criteria.
   expected_output: >
-    A structured SRS document in markdown format with clearly labeled sections:
-    System Overview, User Roles, Functional Requirements, Modules, Data Entities,
-    and API Requirements. Each section should be detailed and actionable.
+    A complete, formal SRS document in markdown format following IEEE 830 structure.
+    Must include: Introduction, Overall Description, Specific Requirements (with
+    numbered functional requirements each having ID, title, description, priority,
+    and acceptance criteria), System Models (use cases, data entities, modules),
+    API Specification (endpoints with request/response details), and Appendix
+    with traceability matrix. The document should be detailed enough that a
+    development team can implement the system without further clarification.
   agent: requirement_analyst
 
 # 2️⃣ Architecture Agent Task
