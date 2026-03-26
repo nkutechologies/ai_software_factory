@@ -1,0 +1,190 @@
+# AI Software Factory Pipeline - Task Definitions
+
+# 1️⃣ Requirement Agent Task
+requirement_task:
+  description: >
+    Convert the following project idea into a comprehensive Software Requirement
+    Specification (SRS) document:
+
+    Project Idea: {project_idea}
+
+    The SRS must include:
+    1. System Overview - brief description of what the system does
+    2. User Roles - all user types who will interact with the system
+    3. Functional Requirements - numbered list (FR1, FR2, etc.) of all features
+    4. Modules - logical groupings of functionality
+    5. Data Entities - all database entities/models needed
+    6. API Requirements - list of REST API endpoints (method + path)
+
+    Be thorough and cover all implied features from the idea.
+  expected_output: >
+    A structured SRS document in markdown format with clearly labeled sections:
+    System Overview, User Roles, Functional Requirements, Modules, Data Entities,
+    and API Requirements. Each section should be detailed and actionable.
+  agent: requirement_analyst
+
+# 2️⃣ Architecture Agent Task
+architecture_task:
+  description: >
+    Based on the SRS document provided, design a complete technical system
+    architecture. Include:
+
+    1. Architecture Style (e.g., Modular Monolith, Microservices)
+    2. Services - list all services/modules with their responsibilities
+    3. Database Tables - list all tables with key columns
+    4. Technology Stack - frontend, backend, database, deployment tools
+    5. API Design - detailed endpoint specifications
+
+    Make practical technology choices suitable for the project scope.
+  expected_output: >
+    A structured architecture document in markdown with sections for:
+    Architecture Style, Services, Database Tables (with column details),
+    Technology Stack, and API Design. Should be detailed enough for
+    developers to implement directly.
+  agent: architecture_agent
+
+# 3️⃣ Planning Agent Task
+planning_task:
+  description: >
+    Based on the architecture document, create a detailed task breakdown
+    as a JSON task list. Each task must specify:
+    - id: task identifier (T1, T2, etc.)
+    - agent: which specialist agent handles it (database_engineer,
+      backend_developer, frontend_developer, qa_engineer)
+    - task: clear description of what to implement
+    - depends_on: list of task IDs this depends on (empty array if none)
+
+    Order tasks by dependency - database first, then backend, then frontend,
+    then QA tests.
+  expected_output: >
+    A valid JSON object with a "tasks" array. Each task has id, agent, task
+    description, and depends_on fields. Tasks should be ordered logically
+    with database tasks first, then backend APIs, then frontend UI, then tests.
+    Format as a clean JSON code block.
+  agent: planning_agent
+
+# 4️⃣ Database Engineer Task
+database_task:
+  description: >
+    Based on the architecture and task plan, generate production-ready
+    PostgreSQL SQL scripts including:
+    1. CREATE TABLE statements with proper data types
+    2. Primary keys and foreign key constraints
+    3. Indexes for frequently queried columns
+    4. NOT NULL and DEFAULT constraints where appropriate
+    5. A seed data script with sample records for testing
+
+    Follow PostgreSQL best practices and naming conventions.
+  expected_output: >
+    Complete SQL scripts in code blocks:
+    1. A schema creation script with all CREATE TABLE statements
+    2. A seed data script with INSERT statements for testing
+    All tables should have proper constraints, indexes, and relationships.
+  agent: database_engineer
+
+# 5️⃣ Backend Developer Task
+backend_task:
+  description: >
+    Based on the architecture, task plan, and database schema, generate
+    production-ready Node.js/Express backend code including:
+    1. Express server setup with middleware
+    2. Route definitions for all API endpoints
+    3. Controller functions with database queries
+    4. Input validation and error handling
+    5. Database connection configuration
+
+    Use parameterized queries to prevent SQL injection.
+    Include proper HTTP status codes and error responses.
+  expected_output: >
+    Complete backend code files in clearly labeled code blocks:
+    1. server.js - Express server setup
+    2. routes/ files - API route definitions
+    3. controllers/ files - Business logic
+    4. db.js - Database connection setup
+    All code should be clean, well-commented, and production-ready.
+  agent: backend_developer
+
+# 6️⃣ Frontend Developer Task
+frontend_task:
+  description: >
+    Based on the architecture, task plan, and API endpoints, generate
+    production-ready React frontend code including:
+    1. Main App component with routing
+    2. Page components for each major feature
+    3. Form components with proper state management
+    4. API integration using fetch or axios
+    5. Basic responsive styling
+
+    Follow React best practices with functional components and hooks.
+  expected_output: >
+    Complete React component files in clearly labeled code blocks:
+    1. App.jsx - Main app with routing
+    2. Feature page components (e.g., AttendancePage, DashboardPage)
+    3. Reusable form/UI components
+    4. API service file for backend communication
+    All code should use functional components, hooks, and clean patterns.
+  agent: frontend_developer
+
+# 7️⃣ QA Engineer Task
+qa_task:
+  description: >
+    Based on ALL the generated code (database, backend, frontend), generate
+    comprehensive test suites:
+    1. API integration tests for every endpoint (happy path + error cases)
+    2. Unit tests for controller/business logic functions
+    3. Frontend component tests
+    4. Test data setup and teardown
+
+    Cover both success and failure scenarios. Include edge cases.
+  expected_output: >
+    Complete test files in clearly labeled code blocks:
+    1. API test suite (e.g., using Jest/Supertest or pytest)
+    2. Unit test suite for business logic
+    3. Frontend component tests
+    Each test should have clear descriptions and assertions.
+  agent: qa_engineer
+
+# 8️⃣ Evaluation Engine Task
+evaluation_task:
+  description: >
+    Review ALL generated artifacts (SRS, architecture, database schema,
+    backend code, frontend code, tests) and produce a quality evaluation
+    report. Score each dimension 1-10:
+
+    1. Code Quality - clean code, best practices, naming conventions
+    2. Test Coverage - are all endpoints and features tested?
+    3. Security Score - SQL injection prevention, input validation, auth
+    4. Architecture Compliance - does code follow the architecture?
+    5. Completeness - are all requirements from the SRS implemented?
+
+    For each dimension, provide the score and specific findings.
+    If any score is below 7, list specific issues that need fixing.
+  expected_output: >
+    A JSON evaluation report with scores and findings for each dimension:
+    code_quality, test_coverage, security_score, architecture_compliance,
+    completeness. Each with a numeric score (1-10) and array of findings.
+    Include an overall_score average and a pass/fail recommendation.
+  agent: evaluation_engine
+
+# 9️⃣ Git Integration Task
+git_integration_task:
+  description: >
+    Based on all generated code and the evaluation report, prepare a
+    complete Git integration plan:
+
+    1. Branch name (e.g., feature/attendance-module)
+    2. File structure - organized directory tree of all generated files
+    3. Commit plan - logical commits with meaningful messages
+    4. Pull Request title and description
+    5. Summary of all changes for reviewers
+
+    The PR description should reference the original idea, list all
+    implemented features, and include the evaluation scores.
+  expected_output: >
+    A complete Git integration document with:
+    1. Branch name
+    2. Directory tree showing all files
+    3. Ordered list of commits with messages
+    4. Full Pull Request title and detailed description in markdown
+    The PR description should be comprehensive enough for a code reviewer.
+  agent: git_integration_agent

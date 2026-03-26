@@ -1,0 +1,23 @@
+[project]
+name = "ai_software_factory"
+version = "0.1.0"
+description = "AI Software Factory Pipeline - from idea to working code using CrewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]==1.11.1"
+]
+
+[project.scripts]
+ai_software_factory = "ai_software_factory.main:run"
+run_crew = "ai_software_factory.main:run"
+train = "ai_software_factory.main:train"
+replay = "ai_software_factory.main:replay"
+test = "ai_software_factory.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
