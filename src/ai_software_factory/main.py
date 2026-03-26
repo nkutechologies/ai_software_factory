@@ -117,7 +117,7 @@ def run():
         )
     }
     try:
-        AiSoftwareFactory().crew().kickoff(inputs=inputs)
+        result = AiSoftwareFactory().crew().kickoff(inputs=inputs)
         # Convert SRS markdown to Word document
         srs_md = 'output/01_srs.md'
         srs_docx = 'output/01_srs.docx'
@@ -132,6 +132,32 @@ def run():
                 subprocess.run(['start', abs_path], shell=True)
             else:
                 subprocess.run(['xdg-open', abs_path])
+
+        # Extract and display deployed URL
+        raw_output = str(result)
+        deployed_url = None
+        for line in raw_output.split('\n'):
+            if 'DEPLOYED_URL:' in line:
+                deployed_url = line.split('DEPLOYED_URL:')[-1].strip()
+                break
+            elif 'vercel.app' in line:
+                import re as _re
+                urls = _re.findall(r'https://[\w.-]+\.vercel\.app[\w/.-]*', line)
+                if urls:
+                    deployed_url = urls[0]
+                    break
+
+        print('\n' + '='*60)
+        print('  🏭  AI SOFTWARE FACTORY - PIPELINE COMPLETE')
+        print('='*60)
+        print(f'  📝  SRS Document:  output/01_srs.docx')
+        print(f'  🗂️   All outputs:   output/')
+        if deployed_url:
+            print(f'  🚀  DEPLOYED APP:  {deployed_url}')
+        else:
+            print(f'  🚀  Deploy manually: cd output/deploy && npx vercel deploy --prod')
+        print('='*60 + '\n')
+
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 

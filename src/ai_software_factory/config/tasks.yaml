@@ -228,54 +228,68 @@ deployment_task:
 
     Follow these steps IN ORDER:
 
-    STEP 1 - ORGANIZE PROJECT FILES:
-    Use file_writer to create the project structure under output/deploy/:
-    - output/deploy/backend/server.js (copy backend code from context)
-    - output/deploy/backend/package.json (with express, pg dependencies)
-    - output/deploy/backend/Dockerfile
-    - output/deploy/backend/.env.example
-    - output/deploy/frontend/package.json (with react dependencies)
-    - output/deploy/frontend/src/App.jsx (copy frontend code from context)
-    - output/deploy/frontend/vercel.json
-    - output/deploy/database/schema.sql (copy SQL from context)
-    - output/deploy/database/seed.sql
+    STEP 1 - CREATE FULL-STACK PROJECT:
+    Use file_writer to create a complete project at output/deploy/ that combines
+    backend API and frontend into a single deployable app:
 
-    STEP 2 - CREATE DEPLOYMENT CONFIGS:
-    Use file_writer to create:
-    - output/deploy/backend/Dockerfile with Node.js 20 alpine base
-    - output/deploy/backend/render.yaml blueprint
-    - output/deploy/frontend/vercel.json with API rewrites
-    - output/deploy/docker-compose.yml for local testing
+    a) Create output/deploy/package.json with:
+       - name: "school-attendance-app"
+       - dependencies: express, pg, cors, dotenv
+       - scripts: { "start": "node server.js", "build": "echo done" }
 
-    STEP 3 - INITIALIZE BACKEND:
-    Use shell_command to run:
-    - cd output/deploy/backend && npm init -y
-    - npm install express pg dotenv cors
+    b) Create output/deploy/server.js:
+       - Import express, set up CORS, JSON parsing
+       - Mount ALL API routes from the backend code in context
+       - Serve static files from /public folder
+       - Listen on process.env.PORT || 3000
 
-    STEP 4 - INITIALIZE FRONTEND:
-    Use shell_command to run:
-    - cd output/deploy/frontend && npm init -y
-    - npx create-react-app . --template minimal (or npm install react react-dom)
+    c) Create output/deploy/public/index.html:
+       - A complete single-page HTML app with embedded CSS and JavaScript
+       - Include ALL frontend functionality (attendance form, dashboard, reports)
+       - Use fetch() to call the API endpoints on the same server
+       - Make it responsive and professional looking
 
-    STEP 5 - CREATE DEPLOYMENT SCRIPT:
-    Use file_writer to create output/deploy/deploy.sh that automates:
-    - Supabase project creation and schema migration
-    - Render service deployment
-    - Vercel frontend deployment
-    - Environment variable configuration
+    d) Create output/deploy/vercel.json:
+       {{
+         "version": 2,
+         "builds": [{{ "src": "server.js", "use": "@vercel/node" }}],
+         "routes": [
+           {{ "src": "/api/(.*)", "dest": "server.js" }},
+           {{ "src": "/(.*)", "dest": "public/$1" }}
+         ]
+       }}
 
-    STEP 6 - VERIFY:
-    Use shell_command to verify:
-    - ls -la output/deploy/ to confirm all files exist
-    - Check package.json files are valid
+    STEP 2 - INSTALL DEPENDENCIES:
+    Use shell_command:
+    - cd output/deploy && npm install
 
-    Report the complete file structure and deployment status.
+    STEP 3 - INITIALIZE GIT:
+    Use shell_command:
+    - cd output/deploy && git init && git add -A && git commit -m "Initial deploy"
+
+    STEP 4 - DEPLOY TO VERCEL:
+    Use shell_command to deploy:
+    - cd output/deploy && npx vercel deploy --prod --yes --token=$VERCEL_TOKEN
+
+    IMPORTANT: The vercel deploy command will output a URL like
+    https://project-name.vercel.app — you MUST capture this URL and include
+    it in your final answer.
+
+    If VERCEL_TOKEN is not set or deployment fails, still create all files
+    and provide the manual deploy command:
+    cd output/deploy && npx vercel deploy --prod
+
+    STEP 5 - VERIFY:
+    Use shell_command to verify all files exist:
+    - ls -la output/deploy/
+
+    Your final answer MUST include the deployed URL (or manual deploy instructions).
   expected_output: >
-    A deployment report with:
-    1. Complete file tree of output/deploy/ showing all created files
-    2. Status of each step (success/failure)
-    3. The deploy.sh script contents
-    4. Instructions to run: cd output/deploy && ./deploy.sh
-    5. All environment variables needed with example values
-    6. URLs where the app will be accessible after deployment
+    A deployment report containing:
+    1. DEPLOYED_URL: The live Vercel URL (e.g., https://school-attendance-app.vercel.app)
+       or manual deployment instructions if auto-deploy failed
+    2. Complete file tree of output/deploy/
+    3. Status of each deployment step (success/failure)
+    4. Environment variables needed for production
+    The DEPLOYED_URL must be clearly labeled on its own line.
   agent: deployment_agent
