@@ -75,6 +75,13 @@ class AiSoftwareFactory():
             verbose=True
         )
 
+    @agent
+    def deployment_agent(self) -> Agent:
+        return Agent(
+            config=self.agents_config['deployment_agent'],
+            verbose=True
+        )
+
     # ─── Tasks (sequential order) ─────────────────────────────
 
     @task
@@ -138,6 +145,13 @@ class AiSoftwareFactory():
         return Task(
             config=self.tasks_config['git_integration_task'],
             output_file='output/09_pull_request.md'
+        )
+
+    @task
+    def deployment_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['deployment_task'],
+            output_file='output/10_deployment.md'
         )
 
     # ─── Crew ─────────────────────────────────────────────────
