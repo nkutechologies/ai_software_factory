@@ -114,7 +114,8 @@ def run():
             'Build a School Attendance Management System. '
             'Features: teacher marks attendance, student attendance dashboard, '
             'monthly attendance reports.'
-        )
+        ),
+        'project_name': 'student-attendance-system',
     }
     try:
         result = AiSoftwareFactory().crew().kickoff(inputs=inputs)
@@ -155,7 +156,7 @@ def run():
         if deployed_url:
             print(f'  🚀  DEPLOYED APP:  {deployed_url}')
         else:
-            print(f'  🚀  Deploy manually: cd output/deploy && npx vercel deploy --prod')
+            print(f'  🚀  Deploy manually: cd output/project && npx vercel deploy --prod')
         print('='*60 + '\n')
 
     except Exception as e:

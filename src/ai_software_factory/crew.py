@@ -3,6 +3,11 @@ from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from ai_software_factory.tools.deployment_tools import FileWriterTool, ShellCommandTool
 
+# Shared tool instances
+_file_writer = FileWriterTool()
+_shell_command = ShellCommandTool()
+_code_tools = [_file_writer, _shell_command]
+
 
 @CrewBase
 class AiSoftwareFactory():
@@ -38,28 +43,32 @@ class AiSoftwareFactory():
     def database_engineer(self) -> Agent:
         return Agent(
             config=self.agents_config['database_engineer'],
-            verbose=True
+            verbose=True,
+            tools=_code_tools
         )
 
     @agent
     def backend_developer(self) -> Agent:
         return Agent(
             config=self.agents_config['backend_developer'],
-            verbose=True
+            verbose=True,
+            tools=_code_tools
         )
 
     @agent
     def frontend_developer(self) -> Agent:
         return Agent(
             config=self.agents_config['frontend_developer'],
-            verbose=True
+            verbose=True,
+            tools=_code_tools
         )
 
     @agent
     def qa_engineer(self) -> Agent:
         return Agent(
             config=self.agents_config['qa_engineer'],
-            verbose=True
+            verbose=True,
+            tools=[_shell_command]
         )
 
     @agent
@@ -73,7 +82,8 @@ class AiSoftwareFactory():
     def git_integration_agent(self) -> Agent:
         return Agent(
             config=self.agents_config['git_integration_agent'],
-            verbose=True
+            verbose=True,
+            tools=_code_tools
         )
 
     @agent
@@ -81,7 +91,7 @@ class AiSoftwareFactory():
         return Agent(
             config=self.agents_config['deployment_agent'],
             verbose=True,
-            tools=[FileWriterTool(), ShellCommandTool()]
+            tools=_code_tools
         )
 
     # ─── Tasks (sequential order) ─────────────────────────────
@@ -109,30 +119,30 @@ class AiSoftwareFactory():
 
     @task
     def database_task(self) -> Task:
+        # Agent writes real files with file_writer + creates hosted DB
         return Task(
             config=self.tasks_config['database_task'],
-            output_file='output/04_database.sql'
         )
 
     @task
     def backend_task(self) -> Task:
+        # Agent writes real code files with file_writer
         return Task(
             config=self.tasks_config['backend_task'],
-            output_file='output/05_backend.md'
         )
 
     @task
     def frontend_task(self) -> Task:
+        # Agent writes real code files with file_writer
         return Task(
             config=self.tasks_config['frontend_task'],
-            output_file='output/06_frontend.md'
         )
 
     @task
     def qa_task(self) -> Task:
+        # Agent tests with shell_command (curl)
         return Task(
             config=self.tasks_config['qa_task'],
-            output_file='output/07_tests.md'
         )
 
     @task
@@ -144,16 +154,16 @@ class AiSoftwareFactory():
 
     @task
     def git_integration_task(self) -> Task:
+        # Agent pushes to GitHub with shell_command
         return Task(
             config=self.tasks_config['git_integration_task'],
-            output_file='output/09_pull_request.md'
         )
 
     @task
     def deployment_task(self) -> Task:
+        # Agent deploys to Vercel with shell_command
         return Task(
             config=self.tasks_config['deployment_task'],
-            output_file='output/10_deployment.md'
         )
 
     # ─── Crew ─────────────────────────────────────────────────
