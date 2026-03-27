@@ -235,7 +235,7 @@ deployment_task:
     a) Create output/deploy/package.json with:
        - name: "school-attendance-app"
        - dependencies: express, pg, cors, dotenv
-       - scripts: { "start": "node server.js", "build": "echo done" }
+       - scripts: start runs "node server.js", build runs "echo done"
 
     b) Create output/deploy/server.js:
        - Import express, set up CORS, JSON parsing
@@ -249,15 +249,9 @@ deployment_task:
        - Use fetch() to call the API endpoints on the same server
        - Make it responsive and professional looking
 
-    d) Create output/deploy/vercel.json:
-       {{
-         "version": 2,
-         "builds": [{{ "src": "server.js", "use": "@vercel/node" }}],
-         "routes": [
-           {{ "src": "/api/(.*)", "dest": "server.js" }},
-           {{ "src": "/(.*)", "dest": "public/$1" }}
-         ]
-       }}
+    d) Create output/deploy/vercel.json with version 2 config:
+       - builds: server.js using @vercel/node
+       - routes: /api/* proxied to server.js, everything else to public/ folder
 
     STEP 2 - INSTALL DEPENDENCIES:
     Use shell_command:
