@@ -1,6 +1,7 @@
 # AI Software Factory Pipeline - Task Definitions
-# All code-producing agents write REAL files to output/project/ using file_writer tool.
-# Shell commands run in output/project/ by default.
+# All code-producing agents write REAL files using file_writer tool.
+# Shell commands ALREADY run inside the project directory automatically.
+# Do NOT use 'cd output/project' in shell commands - you are already there.
 
 # 1 - Requirement Agent Task
 requirement_task:
@@ -102,6 +103,8 @@ database_task:
     Use file_writer to create "database/schema.sql" with:
     - DROP TABLE IF EXISTS statements (CASCADE)
     - CREATE TABLE statements for all entities from the architecture
+    - Use SERIAL PRIMARY KEY for integer IDs (NOT UUIDs) for simplicity
+    - Use gen_random_uuid() if UUIDs are needed (NOT UUID_GENERATE_V4)
     - Proper data types, PRIMARY KEY, FOREIGN KEY, NOT NULL, CHECK constraints
     - CREATE INDEX statements for frequently queried columns
 
@@ -109,34 +112,51 @@ database_task:
     Use file_writer to create "database/seed.sql" with:
     - INSERT statements with realistic sample data (at least 5 rows per table)
 
-    STEP 3 - Create Neon hosted database:
-    Use shell_command to run:
-      neonctl projects create --name {project_name} --org-id org-summer-term-90668608 --output json
-    Parse the connection_uri from the output.
-    If a project already exists you can list with: neonctl projects list --org-id org-summer-term-90668608
+    STEP 3 - Use the EXISTING Neon hosted database:
+    The Neon project already exists. The connection string is:
+    postgresql://neondb_owner:npg_4yPXfCl7dNEx@ep-calm-fire-ajap9ptv.c-3.us-east-2.aws.neon.tech/neondb?sslmode=require
+    The project ID is: royal-sea-51955148
+    The org ID is: org-summer-term-90668608
+    DO NOT create a new project. Use this existing one.
 
     STEP 4 - Run schema against Neon:
-    Use shell_command to run the SQL against the database:
-      psql "CONNECTION_URI_FROM_STEP3" -f database/schema.sql
+    Use shell_command to run:
+      psql "postgresql://neondb_owner:npg_4yPXfCl7dNEx@ep-calm-fire-ajap9ptv.c-3.us-east-2.aws.neon.tech/neondb?sslmode=require" -f database/schema.sql
     Then run seed data:
-      psql "CONNECTION_URI_FROM_STEP3" -f database/seed.sql
-
-    If psql is not available, use: neonctl sql --project-id PROJECT_ID -f database/schema.sql
+      psql "postgresql://neondb_owner:npg_4yPXfCl7dNEx@ep-calm-fire-ajap9ptv.c-3.us-east-2.aws.neon.tech/neondb?sslmode=require" -f database/seed.sql
 
     STEP 5 - Write db.js connection module:
-    Use file_writer to create "db.js" with:
-      const Pool = require pg Pool
-      require dotenv config
-      const pool = new Pool with connectionString from process.env.DATABASE_URL
-      and ssl rejectUnauthorized false
-      Export connectDB function and pool
+    Use file_writer to create "db.js" with EXACTLY this code:
+
+    const { Pool } = require('pg');
+    require('dotenv').config();
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    });
+    const connectDB = async () => {
+      try {
+        const client = await pool.connect();
+        console.log('Database connected successfully');
+        client.release();
+      } catch (err) {
+        console.error('Database connection error:', err.message);
+      }
+    };
+    module.exports = { connectDB, pool };
 
     STEP 6 - Write .env file:
     Use file_writer to create ".env" with:
-      DATABASE_URL=the_connection_uri_from_step3
+      DATABASE_URL=postgresql://neondb_owner:npg_4yPXfCl7dNEx@ep-calm-fire-ajap9ptv.c-3.us-east-2.aws.neon.tech/neondb?sslmode=require
       PORT=3000
 
     Your final answer MUST include the DATABASE_URL connection string.
+    Your final answer MUST also list ALL table names and their columns
+    in a clear format so the next agent can reference them exactly.
+    For example:
+      TABLE: students (student_id, name, email, class_id, created_at)
+      TABLE: attendance_records (record_id, date, student_id, status, created_at)
+    This is CRITICAL - the backend developer will use these exact names.
   expected_output: >
     A report with: the Neon project details, DATABASE_URL connection string,
     confirmation that schema and seed data were executed successfully,
@@ -160,25 +180,52 @@ backend_task:
     FILE 2 - "server.js":
     Create the Express server that:
     - requires dotenv config
-    - imports express cors path
-    - imports connectDB from ./db
+    - imports express, cors, path (MUST require path)
+    - imports { connectDB } from ./db using DESTRUCTURING: const { connectDB } = require('./db')
     - imports route modules from ./routes/
     - Sets up cors() and express.json() middleware
     - Calls connectDB()
     - Mounts API routes: /api/students, /api/attendance, /api/reports, /api/teachers
     - Adds GET /api/health returning status ok and timestamp
-    - Serves static files from public/
-    - SPA fallback for all other routes
+    - Serves static files from public/ using express.static(path.join(__dirname, 'public'))
+    - SPA fallback for all other routes using res.sendFile(path.join(__dirname, 'public', 'index.html'))
     - Error handling middleware
     - Listens on process.env.PORT or 3000
     - module.exports = app
 
     FILE 3 - Create route files in routes/ for each resource:
-    Each route file should have proper Express router with:
-    - GET list all, GET by id, POST create, DELETE
-    - Parameterized queries using pool.query with $1 $2 etc
-    - Proper error handling with next(err)
-    - Input validation returning 400 for missing fields
+
+    CRITICAL: You MUST read the database schema output from the previous
+    database_engineer task. Use the EXACT table names and EXACT column names
+    from that schema. Do NOT invent your own table or column names.
+    For example, if the schema says the table is "attendance_records" with column
+    "student_id", you MUST use those exact names in your SQL queries.
+
+    Each route file MUST:
+    - Import pool with DESTRUCTURING: const { pool } = require('../db')
+    - Use backtick template literals for SQL strings containing single quotes
+    - Have proper Express router with GET list all, GET by id, POST create, DELETE
+    - Use parameterized queries using pool.query with $1 $2 etc
+    - Use proper error handling with next(err)
+    - Include input validation returning 400 for missing fields
+    - NEVER use '' (double single-quotes) for SQL escaping inside JS strings
+
+    EVERY route handler MUST have a COMPLETE working implementation with a
+    real pool.query() call. Do NOT leave any handler body empty or with just
+    a comment. If a GET handler fetches data, it MUST call pool.query and
+    return res.json(result.rows). No stubs, no placeholders, no TODOs.
+
+    ROUTE ORDERING IS CRITICAL in Express.js:
+    If you have a route like GET /:id AND a route like GET /stats,
+    the /stats route MUST be defined BEFORE the /:id route.
+    Otherwise Express matches "stats" as an :id parameter and it fails.
+    Always define named routes (like /stats, /monthly) BEFORE parameterized
+    routes (like /:id) in every route file.
+
+    routes/attendance.js MUST also include:
+    - GET /stats endpoint (BEFORE the /:id route!) that returns totalRecords,
+      presentCount, absentCount, and attendanceRate (percentage) by counting
+      from the attendance table.
 
     FILE 4 - Install dependencies:
     Use shell_command: npm install
@@ -210,6 +257,9 @@ frontend_task:
 
     The HTML should include these sections:
     a) Dashboard - stats cards showing totals, present/absent counts, attendance rate
+       Dashboard data comes from GET /api/attendance/stats (returns totalRecords,
+       presentCount, absentCount, attendanceRate), GET /api/students (array of students),
+       and GET /api/teachers (array of teachers).
     b) Main feature pages based on the SRS requirements
     c) Data management pages with tables, add/edit forms
     d) Reports page with date filters and summary tables
@@ -239,11 +289,11 @@ frontend_task:
 qa_task:
   description: >
     Use shell_command to start the local server and test ALL API endpoints
-    with curl. The project is at output/project/.
+    with curl. Commands already run inside the project directory automatically.
 
     STEP 1 - Start the server in background:
-    Use shell_command: cd output/project && PORT=4000 node server.js &
-    Wait a moment, then test endpoints.
+    Use shell_command: PORT=4000 node server.js &
+    Then sleep 2 to let it start.
 
     STEP 2 - Test each endpoint with curl:
     For each API endpoint, run curl and check the response.
@@ -300,12 +350,10 @@ git_integration_task:
       git add -A
       git commit -m "feat: complete full-stack app generated by AI Software Factory"
 
-    STEP 3 - Create GitHub repo:
+    STEP 3 - Push to GitHub:
+    The repo nkutechologies/{project_name} already exists on GitHub.
     Use shell_command:
-      gh repo create nkutechologies/{project_name} --public --source=. --push
-
-    If the repo already exists, just set remote and push:
-      git remote add origin https://github.com/nkutechologies/{project_name}.git
+      git remote add origin https://github.com/nkutechologies/{project_name}.git 2>/dev/null || true
       git push -u origin main --force
 
     Your answer MUST include the GitHub URL.
@@ -316,18 +364,42 @@ git_integration_task:
 # 10 - Deployment Task
 deployment_task:
   description: >
-    Deploy the project from output/project/ to Vercel with the DATABASE_URL
-    environment variable.
+    Deploy the project to Vercel with the DATABASE_URL
+    environment variable. All shell commands already run inside the project
+    directory automatically - do NOT use cd commands.
 
     STEP 1 - Create vercel.json:
-    Use file_writer to create "vercel.json" with:
-    version 2, builds with server.js using @vercel/node and public/** using @vercel/static,
-    routes: /api/* to server.js, static file patterns to public/, fallback to server.js
+    Use file_writer to create "vercel.json" with EXACTLY this content (copy it character by character):
+    {
+      "version": 2,
+      "builds": [
+        { "src": "server.js", "use": "@vercel/node" },
+        { "src": "public/**", "use": "@vercel/static" }
+      ],
+      "routes": [
+        { "src": "/api/(.*)", "dest": "server.js" },
+        { "src": "/js/(.*)", "dest": "public/js/$1" },
+        { "src": "/css/(.*)", "dest": "public/css/$1" },
+        { "src": "/(.*\\\\.(html|ico|png|jpg|svg|css|js))", "dest": "public/$1" },
+        { "src": "/(.*)", "dest": "server.js" }
+      ]
+    }
+    Do NOT add any other properties like fallback, staticFilePatterns, etc.
+    Do NOT write it as a single line. Use the multi-line format above exactly.
+    The regex pattern for static files MUST be: /(.*\\\\.(html|ico|png|jpg|svg|css|js))
+    That is a forward slash, open paren, dot-star, TWO literal backslashes,
+    a dot, the file extension alternation, close paren.
 
-    STEP 2 - Set environment variable:
-    Use shell_command to add DATABASE_URL to Vercel:
-      npx vercel env add DATABASE_URL production <<< "THE_DATABASE_URL_VALUE"
-    Get the DATABASE_URL from the .env file in the project.
+    STEP 2 - Link to existing Vercel project and set environment variable:
+    Use shell_command:
+      npx vercel link --yes --token=$VERCEL_TOKEN
+    Then set DATABASE_URL (remove first in case it exists, then add):
+    Run these as TWO SEPARATE shell_command calls:
+    First call:
+      npx vercel env rm DATABASE_URL production --yes --token=$VERCEL_TOKEN 2>/dev/null || true
+    Second call:
+      echo "postgresql://neondb_owner:npg_4yPXfCl7dNEx@ep-calm-fire-ajap9ptv.c-3.us-east-2.aws.neon.tech/neondb?sslmode=require" | npx vercel env add DATABASE_URL production --token=$VERCEL_TOKEN
+    If the add command fails saying it already exists, that is OK - continue to deploy.
 
     STEP 3 - Deploy:
     Use shell_command:

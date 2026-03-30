@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 # ──────────────────────────────────────────────────
-#  PROJECT_DIR: all agents write files here
+#  PROJECT_DIR: all agents write files here (absolute)
 # ──────────────────────────────────────────────────
-PROJECT_DIR = Path("output/project")
+PROJECT_DIR = Path(__file__).resolve().parents[3] / "output" / "project"
 
 
 class FileWriterInput(BaseModel):
@@ -65,7 +65,8 @@ class ShellCommandTool(BaseTool):
     name: str = "shell_command"
     description: str = (
         "Executes a shell command and returns stdout+stderr. "
-        "Default working directory is the project folder (output/project/). "
+        "The command ALREADY runs inside the project directory automatically. "
+        "Do NOT prefix commands with 'cd output/project' - you are already there. "
         "Use for: npm install, neonctl commands, git commands, vercel deploy, "
         "psql, curl to test endpoints, etc."
     )
@@ -104,12 +105,5 @@ class ShellCommandTool(BaseTool):
             return output if output.strip() else f"Command completed (exit {result.returncode})"
         except subprocess.TimeoutExpired:
             return "Error: Command timed out after 180 seconds"
-        except Exception as e:
-            return f"Error executing command: {e}"
-            output += f"Exit code: {result.returncode}"
-
-            return output if output.strip() else f"Command completed with exit code {result.returncode}"
-        except subprocess.TimeoutExpired:
-            return "Error: Command timed out after 120 seconds"
         except Exception as e:
             return f"Error executing command: {e}"
